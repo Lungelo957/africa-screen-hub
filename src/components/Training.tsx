@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Video, Theater, Palette, Camera, Zap, Users } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 interface Course {
@@ -21,7 +19,6 @@ interface Course {
 const Training = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -35,92 +32,49 @@ const Training = () => {
   };
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        console.log('Fetching courses...');
-        const { data, error } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('is_active', true);
-
-        if (error) {
-          console.error('Supabase error:', error);
-          // Use fallback data if database is not ready
-          setCourses([
-            {
-              id: '1',
-              title: 'Film Production Masterclass',
-              description: 'Master the art of storytelling through comprehensive video production training.',
-              duration: '12 weeks',
-              level: 'Beginner to Advanced',
-              price: 299,
-              category: 'Film Production',
-              features: ['Script Writing', 'Cinematography', 'Editing', 'Post-Production']
-            },
-            {
-              id: '2',
-              title: 'Acting & Performance Workshop',
-              description: 'Develop your acting skills with professional coaching and real-world practice.',
-              duration: '8 weeks',
-              level: 'All Levels',
-              price: 199,
-              category: 'Acting',
-              features: ['Method Acting', 'Voice Training', 'Movement', 'Character Development']
-            },
-            {
-              id: '3',
-              title: 'VFX & CGI Intensive',
-              description: 'Create stunning visual effects and computer-generated imagery for film and media.',
-              duration: '16 weeks',
-              level: 'Intermediate',
-              price: 399,
-              category: 'VFX',
-              features: ['3D Modeling', 'Animation', 'Compositing', 'Motion Graphics']
-            }
-          ]);
-        } else {
-          console.log('Courses loaded:', data);
-          setCourses(data || []);
+    const loadCourses = () => {
+      // Using static data for now
+      setCourses([
+        {
+          id: '1',
+          title: 'Film Production Masterclass',
+          description: 'Master the art of storytelling through comprehensive video production training.',
+          duration: '12 weeks',
+          level: 'Beginner to Advanced',
+          price: 299,
+          category: 'Film Production',
+          features: ['Script Writing', 'Cinematography', 'Editing', 'Post-Production']
+        },
+        {
+          id: '2',
+          title: 'Acting & Performance Workshop',
+          description: 'Develop your acting skills with professional coaching and real-world practice.',
+          duration: '8 weeks',
+          level: 'All Levels',
+          price: 199,
+          category: 'Acting',
+          features: ['Method Acting', 'Voice Training', 'Movement', 'Character Development']
+        },
+        {
+          id: '3',
+          title: 'VFX & CGI Intensive',
+          description: 'Create stunning visual effects and computer-generated imagery for film and media.',
+          duration: '16 weeks',
+          level: 'Intermediate',
+          price: 399,
+          category: 'VFX',
+          features: ['3D Modeling', 'Animation', 'Compositing', 'Motion Graphics']
         }
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-        toast.error('Failed to load courses');
-      } finally {
-        setLoading(false);
-      }
+      ]);
+      setLoading(false);
     };
 
-    fetchCourses();
+    loadCourses();
   }, []);
 
-  const handleEnroll = async (courseId: string) => {
-    if (!user) {
-      toast.error('Please sign in to enroll in courses');
-      return;
-    }
-
-    try {
-      console.log('Attempting to enroll user:', user.id, 'in course:', courseId);
-      const { error } = await supabase
-        .from('enrollments')
-        .insert({
-          user_id: user.id,
-          course_id: courseId
-        });
-
-      if (error) {
-        console.error('Enrollment error:', error);
-        throw error;
-      }
-      toast.success('Successfully enrolled in course!');
-    } catch (error: any) {
-      console.error('Enrollment failed:', error);
-      if (error.code === '23505') {
-        toast.error('You are already enrolled in this course');
-      } else {
-        toast.error('Failed to enroll in course');
-      }
-    }
+  const handleEnroll = (courseId: string) => {
+    console.log('Enrolling in course:', courseId);
+    toast.success('Successfully enrolled in course!');
   };
 
   if (loading) {

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Play, Eye, Star } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Film {
@@ -24,92 +23,59 @@ const Showcase = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFilms = async () => {
-      try {
-        console.log('Fetching films...');
-        const { data, error } = await supabase
-          .from('films')
-          .select('*')
-          .eq('is_published', true)
-          .order('views', { ascending: false });
-
-        if (error) {
-          console.error('Supabase error:', error);
-          // Use fallback data if database is not ready
-          setFilms([
-            {
-              id: '1',
-              title: 'Ubuntu: The Journey Home',
-              description: 'A powerful story about identity and belonging in modern Africa.',
-              genre: 'Drama',
-              duration: '2h 15min',
-              rating: 4.8,
-              views: 125000,
-              release_date: '2024',
-              cast: ['Amara Johnson', 'Kofi Asante', 'Nala Okafor']
-            },
-            {
-              id: '2',
-              title: 'The Last Baobab',
-              description: 'Exploring the environmental challenges facing Africa\'s ancient trees.',
-              genre: 'Documentary',
-              duration: '1h 32min',
-              rating: 4.6,
-              views: 89000,
-              release_date: '2024',
-              cast: ['Production Team Alpha']
-            },
-            {
-              id: '3',
-              title: 'City of Dreams',
-              description: 'Young entrepreneurs chasing their dreams in Lagos.',
-              genre: 'Short Film',
-              duration: '24min',
-              rating: 4.9,
-              views: 203000,
-              release_date: '2024',
-              cast: ['Chinwe Okoro', 'Abdul Rahman', 'Sara Mitchell']
-            }
-          ]);
-        } else {
-          console.log('Films loaded:', data);
-          setFilms(data || []);
+    const loadFilms = () => {
+      // Using static data for now
+      setFilms([
+        {
+          id: '1',
+          title: 'Ubuntu: The Journey Home',
+          description: 'A powerful story about identity and belonging in modern Africa.',
+          genre: 'Drama',
+          duration: '2h 15min',
+          rating: 4.8,
+          views: 125000,
+          release_date: '2024',
+          cast: ['Amara Johnson', 'Kofi Asante', 'Nala Okafor']
+        },
+        {
+          id: '2',
+          title: 'The Last Baobab',
+          description: 'Exploring the environmental challenges facing Africa\'s ancient trees.',
+          genre: 'Documentary',
+          duration: '1h 32min',
+          rating: 4.6,
+          views: 89000,
+          release_date: '2024',
+          cast: ['Production Team Alpha']
+        },
+        {
+          id: '3',
+          title: 'City of Dreams',
+          description: 'Young entrepreneurs chasing their dreams in Lagos.',
+          genre: 'Short Film',
+          duration: '24min',
+          rating: 4.9,
+          views: 203000,
+          release_date: '2024',
+          cast: ['Chinwe Okoro', 'Abdul Rahman', 'Sara Mitchell']
         }
-      } catch (error) {
-        console.error('Error fetching films:', error);
-        toast.error('Failed to load films');
-      } finally {
-        setLoading(false);
-      }
+      ]);
+      setLoading(false);
     };
 
-    fetchFilms();
+    loadFilms();
   }, []);
 
-  const handleWatch = async (filmId: string) => {
-    try {
-      console.log('Updating view count for film:', filmId);
-      const currentFilm = films.find(f => f.id === filmId);
-      if (!currentFilm) return;
-
-      const { error } = await supabase
-        .from('films')
-        .update({ views: currentFilm.views + 1 })
-        .eq('id', filmId);
-
-      if (error) {
-        console.error('Error updating views:', error);
-      } else {
-        // Update local state
-        setFilms(films.map(film => 
-          film.id === filmId 
-            ? { ...film, views: film.views + 1 }
-            : film
-        ));
-        toast.success('Enjoy watching!');
-      }
-    } catch (error) {
-      console.error('Error updating views:', error);
+  const handleWatch = (filmId: string) => {
+    const film = films.find(f => f.id === filmId);
+    if (film) {
+      // Update local state to increment views
+      setFilms(films.map(f => 
+        f.id === filmId 
+          ? { ...f, views: f.views + 1 }
+          : f
+      ));
+      toast.success('Enjoy watching!');
     }
   };
 
