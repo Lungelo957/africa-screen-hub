@@ -72,13 +72,13 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-african-sunset" />
-                <span className="text-sm text-muted-foreground">+27 (0) 11 123 4567</span>
+                <span className="text-sm text-muted-foreground">+27 (0) 67 709 1064</span>
               </div>
               <div className="flex items-start space-x-3">
                 <MapPin className="h-4 w-4 text-african-sunset mt-0.5" />
                 <span className="text-sm text-muted-foreground">
-                  123 Creative Studios<br />
-                  Johannesburg, South Africa
+                  123 Creative studios<br />
+                  Durban, South Africa
                 </span>
               </div>
             </div>
@@ -88,7 +88,7 @@ const Footer = () => {
         <div className="border-t border-border mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              © 2024 The Screen of Africa Media. All rights reserved.
+              © 2025 The Screen of Africa Media(created by Lungelo). All rights reserved.
             </p>
             <div className="flex space-x-6">
               <a href="#" className="text-sm text-muted-foreground hover:text-african-gold transition-colors">Privacy Policy</a>
