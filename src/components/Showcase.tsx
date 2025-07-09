@@ -1,135 +1,169 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Play, Eye, Calendar, Star } from 'lucide-react';
+import { Play, Eye, Star } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface Film {
+  id: string;
+  title: string;
+  description: string;
+  genre: string;
+  duration: string;
+  rating: number;
+  views: number;
+  release_date: string;
+  cast: string[];
+  thumbnail_url: string;
+}
 
 const Showcase = () => {
-  const films = [
-    {
-      title: "Ubuntu: The Journey Home",
-      genre: "Drama",
-      duration: "2h 15min",
-      rating: 4.8,
-      views: "125K",
-      releaseDate: "2024",
-      description: "A powerful story about identity and belonging in modern Africa.",
-      cast: ["Amara Johnson", "Kofi Asante", "Nala Okafor"],
-      thumbnail: "bg-gradient-to-br from-african-gold/60 to-african-sunset/40"
-    },
-    {
-      title: "The Last Baobab",
-      genre: "Documentary",
-      duration: "1h 32min",
-      rating: 4.6,
-      views: "89K",
-      releaseDate: "2024",
-      description: "Exploring the environmental challenges facing Africa's ancient trees.",
-      cast: ["Production Team Alpha"],
-      thumbnail: "bg-gradient-to-br from-african-earth/60 to-african-gold/40"
-    },
-    {
-      title: "City of Dreams",
-      genre: "Short Film",
-      duration: "24min",
-      rating: 4.9,
-      views: "203K",
-      releaseDate: "2024",
-      description: "Young entrepreneurs chasing their dreams in Lagos.",
-      cast: ["Chinwe Okoro", "Abdul Rahman", "Sara Mitchell"],
-      thumbnail: "bg-gradient-to-br from-african-sky/60 to-african-sunset/40"
-    },
-    {
-      title: "Rhythms of the Sahel",
-      genre: "Music Documentary",
-      duration: "58min",
-      rating: 4.7,
-      views: "67K",
-      releaseDate: "2023",
-      description: "The evolution of traditional music in West Africa.",
-      cast: ["Cultural Music Collective"],
-      thumbnail: "bg-gradient-to-br from-african-sunset/60 to-african-gold/40"
+  const [films, setFilms] = useState<Film[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFilms = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('films')
+          .select('*')
+          .eq('is_published', true)
+          .order('views', { ascending: false });
+
+        if (error) throw error;
+        setFilms(data || []);
+      } catch (error) {
+        console.error('Error fetching films:', error);
+        toast.error('Failed to load films');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFilms();
+  }, []);
+
+  const handleWatch = async (filmId: string) => {
+    try {
+      // Increment view count
+      const { error } = await supabase
+        .from('films')
+        .update({ views: films.find(f => f.id === filmId)?.views + 1 || 1 })
+        .eq('id', filmId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setFilms(films.map(film => 
+        film.id === filmId 
+          ? { ...film, views: film.views + 1 }
+          : film
+      ));
+      
+      toast.success('Enjoy watching!');
+    } catch (error) {
+      console.error('Error updating views:', error);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <section id="showcase" className="py-20">
+        <div className="container mx-auto section-padding">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading films...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="showcase" className="py-20">
       <div className="container mx-auto section-padding">
         <div className="text-center space-y-4 mb-16 animate-fade-in">
           <h2 className="text-4xl lg:text-5xl font-bold">
-            <span className="text-gradient">Film Showcase</span>
+            <span className="text-gradient">Featured Films</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Discover incredible stories created by our talented community. From feature films to documentaries, 
-            experience the authentic voice of African cinema.
+            Discover incredible stories created by our talented community members. 
+            From powerful dramas to innovative documentaries.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 mb-12">
-          {films.map((film, index) => (
-            <Card key={index} className="card-hover bg-card/50 backdrop-blur border-african-gold/20 overflow-hidden">
-              <div className={`aspect-video ${film.thumbnail} relative group cursor-pointer`}>
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full p-6 group-hover:scale-110 transition-transform duration-300">
-                    <Play className="h-12 w-12 text-white ml-1" />
-                  </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {films.map((film) => (
+            <Card key={film.id} className="group card-hover bg-card/50 backdrop-blur border-african-gold/20 overflow-hidden">
+              <div className="relative">
+                <div className="aspect-video bg-gradient-to-br from-african-gold/20 to-african-sunset/20 flex items-center justify-center">
+                  <Play className="h-12 w-12 text-african-gold opacity-70 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="absolute top-4 left-4">
-                  <Badge variant="secondary" className="bg-african-gold text-african-earth">
+                <div className="absolute top-2 right-2">
+                  <Badge variant="secondary" className="bg-black/50 text-white">
                     {film.genre}
                   </Badge>
                 </div>
-                <div className="absolute top-4 right-4 flex items-center space-x-1 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1">
-                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                  <span className="text-white text-sm font-medium">{film.rating}</span>
-                </div>
               </div>
               
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">{film.title}</h3>
-                    <p className="text-muted-foreground">{film.description}</p>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg line-clamp-1">{film.title}</CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {film.description}
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{film.duration}</span>
+                    <span>{film.release_date}</span>
                   </div>
                   
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-4 text-sm">
                     <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{film.releaseDate}</span>
+                      <Star className="h-4 w-4 text-african-gold fill-current" />
+                      <span className="font-medium">{film.rating}</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Eye className="h-4 w-4" />
-                      <span>{film.views} views</span>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <span>{film.views.toLocaleString()}</span>
                     </div>
-                    <span>{film.duration}</span>
                   </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-2 text-african-gold">Cast:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {film.cast.map((actor, castIndex) => (
-                        <Badge key={castIndex} variant="outline" className="border-african-sunset/50 text-african-sunset">
+                  
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Cast:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {film.cast.slice(0, 2).map((actor, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
                           {actor}
                         </Badge>
                       ))}
+                      {film.cast.length > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{film.cast.length - 2}
+                        </Badge>
+                      )}
                     </div>
                   </div>
-
-                  <Button className="w-full btn-primary">
-                    <Play className="h-4 w-4 mr-2" />
+                  
+                  <button
+                    onClick={() => handleWatch(film.id)}
+                    className="w-full mt-4 bg-african-gradient text-white py-2 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-african-gold/25"
+                  >
                     Watch Now
-                  </Button>
+                  </button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="text-center">
-          <Button variant="outline" className="text-lg px-8 py-4 border-african-gold text-african-gold hover:bg-african-gold hover:text-african-earth">
+        <div className="text-center mt-12">
+          <button className="btn-primary text-lg px-8 py-4">
             View All Films
-          </Button>
+          </button>
         </div>
       </div>
     </section>

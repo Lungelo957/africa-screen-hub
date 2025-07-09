@@ -1,48 +1,49 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Film, User, BookOpen } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import AuthButton from './AuthButton';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const navItems = [
+    { href: '#training', label: 'Training' },
+    { href: '#showcase', label: 'Showcase' },
+    { href: '#members', label: 'Community' },
+    { href: '#pricing', label: 'Pricing' }
+  ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto section-padding py-4">
-        <div className="flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-african-gold/20">
+      <div className="container mx-auto section-padding">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-african-gradient p-2 rounded-lg">
-              <Film className="h-8 w-8 text-white" />
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-african-gradient rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">SA</span>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gradient">The Screen of Africa</h1>
-              <p className="text-xs text-muted-foreground">Media & Training Hub</p>
-            </div>
+            <span className="text-xl font-bold text-gradient">Screen of Africa</span>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-foreground hover:text-african-gold transition-colors">Home</a>
-            <a href="#training" className="text-foreground hover:text-african-gold transition-colors">Training</a>
-            <a href="#showcase" className="text-foreground hover:text-african-gold transition-colors">Showcase</a>
-            <a href="#members" className="text-foreground hover:text-african-gold transition-colors">Members</a>
-            <a href="#pricing" className="text-foreground hover:text-african-gold transition-colors">Pricing</a>
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-foreground hover:text-african-gold transition-colors duration-300 font-medium"
+              >
+                {item.label}
+              </a>
+            ))}
           </nav>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Auth Button */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Login
-            </Button>
-            <Button className="btn-primary" size="sm">
-              Join Now
-            </Button>
+            <AuthButton />
           </div>
 
           {/* Mobile Menu Button */}
@@ -54,23 +55,22 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-border">
+          <div className="md:hidden py-4 border-t border-african-gold/20 mt-4">
             <nav className="flex flex-col space-y-4">
-              <a href="#home" className="text-foreground hover:text-african-gold transition-colors">Home</a>
-              <a href="#training" className="text-foreground hover:text-african-gold transition-colors">Training</a>
-              <a href="#showcase" className="text-foreground hover:text-african-gold transition-colors">Showcase</a>
-              <a href="#members" className="text-foreground hover:text-african-gold transition-colors">Members</a>
-              <a href="#pricing" className="text-foreground hover:text-african-gold transition-colors">Pricing</a>
-              <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4 mr-2" />
-                  Login
-                </Button>
-                <Button className="btn-primary" size="sm">
-                  Join Now
-                </Button>
+              {navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-foreground hover:text-african-gold transition-colors duration-300 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+              <div className="pt-4 border-t border-african-gold/20">
+                <AuthButton />
               </div>
             </nav>
           </div>
