@@ -1,24 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Video, Theater, Palette, Camera, Zap, Users } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
-  level: string;
-  price: number;
-  category: string;
-  features: string[];
-}
+import { useCourses } from '@/hooks/useCourses';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const Training = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { courses, loading, error } = useCourses();
+  const { user } = useAuth();
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -31,50 +23,33 @@ const Training = () => {
     }
   };
 
-  useEffect(() => {
-    const loadCourses = () => {
-      // Using static data for now
-      setCourses([
-        {
-          id: '1',
-          title: 'Film Production Masterclass',
-          description: 'Master the art of storytelling through comprehensive video production training.',
-          duration: '12 weeks',
-          level: 'Beginner to Advanced',
-          price: 299,
-          category: 'Film Production',
-          features: ['Script Writing', 'Cinematography', 'Editing', 'Post-Production']
-        },
-        {
-          id: '2',
-          title: 'Acting & Performance Workshop',
-          description: 'Develop your acting skills with professional coaching and real-world practice.',
-          duration: '8 weeks',
-          level: 'All Levels',
-          price: 199,
-          category: 'Acting',
-          features: ['Method Acting', 'Voice Training', 'Movement', 'Character Development']
-        },
-        {
-          id: '3',
-          title: 'VFX & CGI Intensive',
-          description: 'Create stunning visual effects and computer-generated imagery for film and media.',
-          duration: '16 weeks',
-          level: 'Intermediate',
-          price: 399,
-          category: 'VFX',
-          features: ['3D Modeling', 'Animation', 'Compositing', 'Motion Graphics']
+  const handleEnroll = async (courseId: string) => {
+    if (!user) {
+      toast.error('Please log in to enroll in courses');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: courseId
+        });
+
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          toast.info('You are already enrolled in this course!');
+        } else {
+          throw error;
         }
-      ]);
-      setLoading(false);
-    };
-
-    loadCourses();
-  }, []);
-
-  const handleEnroll = (courseId: string) => {
-    console.log('Enrolling in course:', courseId);
-    toast.success('Successfully enrolled in course!');
+      } else {
+        toast.success('Successfully enrolled in course!');
+      }
+    } catch (err) {
+      console.error('Enrollment error:', err);
+      toast.error('Failed to enroll in course');
+    }
   };
 
   if (loading) {
@@ -83,6 +58,18 @@ const Training = () => {
         <div className="container mx-auto section-padding">
           <div className="text-center">
             <p className="text-muted-foreground">Loading courses...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="training" className="py-20 bg-muted/30">
+        <div className="container mx-auto section-padding">
+          <div className="text-center">
+            <p className="text-red-500">Error loading courses: {error}</p>
           </div>
         </div>
       </section>
@@ -104,7 +91,7 @@ const Training = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses.map((course) => {
-            const IconComponent = getCategoryIcon(course.category);
+            const IconComponent = getCategoryIcon(course.category || '');
             return (
               <Card key={course.id} className="card-hover bg-card/50 backdrop-blur border-african-gold/20">
                 <CardHeader>
@@ -130,17 +117,17 @@ const Training = () => {
                     <div>
                       <h4 className="font-semibold mb-2 text-african-gold">What You'll Learn:</h4>
                       <ul className="space-y-1">
-                        {course.features.map((feature, featureIndex) => (
+                        {course.features?.map((feature, featureIndex) => (
                           <li key={featureIndex} className="text-sm text-muted-foreground flex items-center">
                             <div className="w-1.5 h-1.5 bg-african-sunset rounded-full mr-2"></div>
                             {feature}
                           </li>
-                        ))}
+                        )) || <li className="text-sm text-muted-foreground">Course features coming soon</li>}
                       </ul>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-african-gold">
-                        R{course.price}
+                        R{course.price || 0}
                       </span>
                       <Button 
                         className="btn-secondary"
@@ -155,6 +142,12 @@ const Training = () => {
             );
           })}
         </div>
+
+        {courses.length === 0 && (
+          <div className="text-center mt-12">
+            <p className="text-muted-foreground">No courses available at the moment. Check back soon!</p>
+          </div>
+        )}
 
         <div className="text-center mt-12">
           <Button className="btn-primary text-lg px-8 py-4">

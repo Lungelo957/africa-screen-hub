@@ -1,81 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Play, Eye, Star } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Film {
-  id: string;
-  title: string;
-  description: string;
-  genre: string;
-  duration: string;
-  rating: number;
-  views: number;
-  release_date: string;
-  cast: string[];
-  thumbnail_url?: string;
-}
+import { useFilms } from '@/hooks/useFilms';
 
 const Showcase = () => {
-  const [films, setFilms] = useState<Film[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { films, loading, error, incrementViews } = useFilms();
 
-  useEffect(() => {
-    const loadFilms = () => {
-      // Using static data for now
-      setFilms([
-        {
-          id: '1',
-          title: 'Ubuntu: The Journey Home',
-          description: 'A powerful story about identity and belonging in modern Africa.',
-          genre: 'Drama',
-          duration: '2h 15min',
-          rating: 4.8,
-          views: 125000,
-          release_date: '2024',
-          cast: ['Amara Johnson', 'Kofi Asante', 'Nala Okafor']
-        },
-        {
-          id: '2',
-          title: 'The Last Baobab',
-          description: 'Exploring the environmental challenges facing Africa\'s ancient trees.',
-          genre: 'Documentary',
-          duration: '1h 32min',
-          rating: 4.6,
-          views: 89000,
-          release_date: '2024',
-          cast: ['Production Team Alpha']
-        },
-        {
-          id: '3',
-          title: 'City of Dreams',
-          description: 'Young entrepreneurs chasing their dreams in Lagos.',
-          genre: 'Short Film',
-          duration: '24min',
-          rating: 4.9,
-          views: 203000,
-          release_date: '2024',
-          cast: ['Chinwe Okoro', 'Abdul Rahman', 'Sara Mitchell']
-        }
-      ]);
-      setLoading(false);
-    };
-
-    loadFilms();
-  }, []);
-
-  const handleWatch = (filmId: string) => {
-    const film = films.find(f => f.id === filmId);
-    if (film) {
-      // Update local state to increment views
-      setFilms(films.map(f => 
-        f.id === filmId 
-          ? { ...f, views: f.views + 1 }
-          : f
-      ));
+  const handleWatch = async (filmId: string) => {
+    try {
+      await incrementViews(filmId);
       toast.success('Enjoy watching!');
+    } catch (err) {
+      console.error('Error updating views:', err);
+      toast.error('Failed to load video');
     }
   };
 
@@ -85,6 +25,18 @@ const Showcase = () => {
         <div className="container mx-auto section-padding">
           <div className="text-center">
             <p className="text-muted-foreground">Loading films...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="showcase" className="py-20">
+        <div className="container mx-auto section-padding">
+          <div className="text-center">
+            <p className="text-red-500">Error loading films: {error}</p>
           </div>
         </div>
       </section>
@@ -108,9 +60,17 @@ const Showcase = () => {
           {films.map((film) => (
             <Card key={film.id} className="group card-hover bg-card/50 backdrop-blur border-african-gold/20 overflow-hidden">
               <div className="relative">
-                <div className="aspect-video bg-gradient-to-br from-african-gold/20 to-african-sunset/20 flex items-center justify-center">
-                  <Play className="h-12 w-12 text-african-gold opacity-70 group-hover:opacity-100 transition-opacity" />
-                </div>
+                {film.thumbnail_url ? (
+                  <img 
+                    src={film.thumbnail_url} 
+                    alt={film.title}
+                    className="aspect-video w-full object-cover"
+                  />
+                ) : (
+                  <div className="aspect-video bg-gradient-to-br from-african-gold/20 to-african-sunset/20 flex items-center justify-center">
+                    <Play className="h-12 w-12 text-african-gold opacity-70 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                )}
                 <div className="absolute top-2 right-2">
                   <Badge variant="secondary" className="bg-black/50 text-white">
                     {film.genre}
@@ -146,12 +106,12 @@ const Showcase = () => {
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">Cast:</p>
                     <div className="flex flex-wrap gap-1">
-                      {film.cast.slice(0, 2).map((actor, index) => (
+                      {film.cast?.slice(0, 2).map((actor, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {actor}
                         </Badge>
-                      ))}
-                      {film.cast.length > 2 && (
+                      )) || <Badge variant="outline" className="text-xs">TBA</Badge>}
+                      {film.cast && film.cast.length > 2 && (
                         <Badge variant="outline" className="text-xs">
                           +{film.cast.length - 2}
                         </Badge>
@@ -170,6 +130,12 @@ const Showcase = () => {
             </Card>
           ))}
         </div>
+
+        {films.length === 0 && (
+          <div className="text-center mt-12">
+            <p className="text-muted-foreground">No films available at the moment. Check back soon!</p>
+          </div>
+        )}
 
         <div className="text-center mt-12">
           <button className="btn-primary text-lg px-8 py-4">
