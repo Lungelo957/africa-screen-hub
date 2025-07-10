@@ -2,8 +2,28 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Camera, Users, Award } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/get-started');
+    }
+  };
+
+  const handleViewShowcase = () => {
+    const showcaseElement = document.getElementById('showcase');
+    if (showcaseElement) {
+      showcaseElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-hero-pattern">
       <div className="absolute inset-0 bg-african-gradient opacity-10"></div>
@@ -20,14 +40,24 @@ const Hero = () => {
                 Join Africa's premier media training platform. Learn film production, acting, VFX, and animation 
                 while collaborating on real projects that showcase your talent to the world.
               </p>
+              {user && (
+                <div className="flex items-center gap-2 text-african-gold">
+                  <Users className="h-5 w-5" />
+                  <span className="font-medium">Welcome back, {user.user_metadata?.first_name || 'Creative'}!</span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="btn-primary text-lg px-8 py-4">
+              <Button className="btn-primary text-lg px-8 py-4" onClick={handleGetStarted}>
                 <Play className="h-5 w-5 mr-2" />
-                Start Your Journey
+                {user ? 'Go to Dashboard' : 'Start Your Journey'}
               </Button>
-              <Button variant="outline" className="text-lg px-8 py-4 border-african-gold text-african-gold hover:bg-african-gold hover:text-african-earth">
+              <Button 
+                variant="outline" 
+                className="text-lg px-8 py-4 border-african-gold text-african-gold hover:bg-african-gold hover:text-african-earth"
+                onClick={handleViewShowcase}
+              >
                 <Camera className="h-5 w-5 mr-2" />
                 View Showcase
               </Button>
